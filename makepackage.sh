@@ -26,9 +26,9 @@ if [ ! -r /build/packages/packages.db.tar.gz ]; then
 	sudo -u builder repo-add /build/packages/packages.db.tar.gz
 fi
 
-countries="United_Kingdom,Germany,France,Denmark,Netherlands,Ireland"
+countries=France
 if [ ! -z "${BRANCH:-}" ]; then
-	pacman-mirrors -c"$countries" -b"$BRANCH"
+	pacman-mirrors -a -c"$countries" -b "$BRANCH"
 else
 	pacman-mirrors -c"$countries"
 fi
@@ -49,7 +49,7 @@ if [ ! -z "${validpgpkeys:-}" ]; then
 	done
 fi
 
-pacman --noconfirm --noprogressbar -Syyu
+pacman-static --noconfirm --noprogressbar -Syyu
 
 if [ ! -z "${IMTOOLAZYTOCHECKSUMS:-}" ]; then
 	echo "Updating checksums..."
