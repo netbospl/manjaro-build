@@ -1,7 +1,14 @@
 FROM jonathonf/manjaro:latest
 
-RUN pacman-mirrors -c all && \
-    pacman -Syuu --noconfirm --noprogressbar --needed base-devel && \
+ADD pacman-trustall.conf /pacman-trustall.conf
+RUN mv /etc/pacman.conf /pacman.conf && \
+    mv /pacman-trustall.conf /etc/pacman.conf
+RUN pacman-key --init && pacman-key --populate archlinux manjaro
+# RUN /usr/bin/sed -i "/\[core\]/ { N; s|\[core\]\n|\[packages\]\nSigLevel = Optional TrustAll\nServer = file:///build/packages\n\n&| } " /etc/pacman.conf
+
+RUN pacman-mirrors -c France -a -B stable
+RUN pacman -Syuu --noconfirm --noprogressbar --needed base-devel sed ccache && \
+    sed -i "/\[core\]/ { N; s|\[core\]\n|\[packages\]\nSigLevel = Optional TrustAll\nServer = file:///build/packages\n\n&| } " /etc/pacman.conf && \
     pacman -Scc --noconfirm --noprogressbar && \
     rm -fr /var/cache/pacman/pkg/* && \
     rm -f /var/lib/pacman/sync/*
@@ -25,17 +32,20 @@ RUN sed -i '44cMAKEFLAGS="-j$(($(nproc) + 1))"' /etc/makepkg.conf && \
     sed -i '120cLOGDEST=/build/makepkglogs'     /etc/makepkg.conf && \
     sed -i '132cCOMPRESSXZ=(xz -c -z -T0 -)'    /etc/makepkg.conf
 
-RUN sed -i "/\[core\]/ { N; s|\[core\]\n|\
-\[packages\]\n\
-SigLevel = Optional TrustAll\n\
-Server = file:///build/packages\n\n&| } " /etc/pacman.conf
+# RUN sed -i "/\[core\]/ { N; s|\[core\]\n|\
+# \[packages\]\n\
+# SigLevel = Optional TrustAll\n\
+# Server = file:///build/packages\n\n&| } " /etc/pacman.conf
 
 RUN rm /usr/sbin/pinentry && \
-    ln -s /usr/sbin/pinentry-curses /usr/sbin/pinentry
+    ln -s /usr/sbin/pinentry-curses /usr/sbin/pinentry && \
+    mkdir -p /data/ccache && \
+    chmod 777 -R /data/ccache
+ENV CCACHE_DIR=/data/ccache
 
 ADD makepackage.sh /makepackage.sh
 RUN chmod a+rx /makepackage.sh
 
-VOLUME [ '/build' '/gpg' '/pkgcache' ]
+VOLUME [ '/build' '/gpg' '/pkgcache' '/data' ]
 
 CMD [ "/makepackage.sh" ]
