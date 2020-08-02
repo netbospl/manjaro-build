@@ -4,10 +4,9 @@ ADD pacman-trustall.conf /pacman-trustall.conf
 RUN mv /etc/pacman.conf /pacman.conf && \
     mv /pacman-trustall.conf /etc/pacman.conf
 RUN pacman-key --init && pacman-key --populate archlinux manjaro
-# RUN /usr/bin/sed -i "/\[core\]/ { N; s|\[core\]\n|\[packages\]\nSigLevel = Optional TrustAll\nServer = file:///build/packages\n\n&| } " /etc/pacman.conf
 
 RUN pacman-mirrors -c France -a -B stable
-RUN pacman -Syuu --noconfirm --noprogressbar --needed base-devel sed ccache && \
+RUN pacman -Syuu --noconfirm --noprogressbar --needed base-devel sed ccache pacman-static && \
     sed -i "/\[core\]/ { N; s|\[core\]\n|\[packages\]\nSigLevel = Optional TrustAll\nServer = file:///build/packages\n\n&| } " /etc/pacman.conf && \
     pacman -Scc --noconfirm --noprogressbar && \
     rm -fr /var/cache/pacman/pkg/* && \
